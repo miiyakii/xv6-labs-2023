@@ -17,6 +17,7 @@ main(int argc, char *argv[])
       fprintf(2, "rm: %s failed to delete\n", argv[i]);
       break;
     }
+    
   }
 
   exit(0);
