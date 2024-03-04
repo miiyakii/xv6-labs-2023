@@ -59,8 +59,8 @@ sys_sleep(void)
     n = 0;
   acquire(&tickslock);
   ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(killed(myproc())){
+  while(ticks - ticks0 < n) {
+    if(killed(myproc())) {
       release(&tickslock);
       return -1;
     }
@@ -90,4 +90,10 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+uint64
+sys_trace(void)
+{
+  argint(0, &myproc()->trace_mask); // Store the trace mask to the struct proc of current process. 
+  return 0;
 }
