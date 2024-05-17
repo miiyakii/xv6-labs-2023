@@ -58,8 +58,8 @@ sys_sleep(void)
   argint(0, &n);
   acquire(&tickslock);
   ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(killed(myproc())){
+  while(ticks - ticks0 < n) {
+    if(killed(myproc())) {
       release(&tickslock);
       return -1;
     }
@@ -74,6 +74,24 @@ sys_sleep(void)
 int
 sys_pgaccess(void)
 {
+  struct proc *p = myproc();
+  uint64 base;
+  int len;
+  uint64 mask;
+  int ans = 0;
+  argaddr(0, &base);
+  argint(1, &len);
+  argaddr(2, &mask);
+
+  for(int i = 0;i < len && i < 32;i++) {
+    pte_t *pte;
+    pte = walk(p->pagetable, base + i * PGSIZE, 0);
+    if(pte != 0 && ((*pte) & PTE_A)) {
+      ans |= 1 << i;
+      *pte ^= PTE_A;  // clear PTE_A
+    }
+  }
+  copyout(myproc()->pagetable, mask, (char*)&ans, sizeof(ans));
   // lab pgtbl: your code here.
   return 0;
 }
