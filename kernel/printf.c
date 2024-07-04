@@ -55,7 +55,7 @@ printptr(uint64 x)
   int i;
   consputc('0');
   consputc('x');
-  for (i = 0; i < (sizeof(uint64) * 2); i++, x <<= 4)
+  for(i = 0; i < (sizeof(uint64) * 2); i++, x <<= 4)
     consputc(digits[x >> (sizeof(uint64) * 8 - 4)]);
 }
 
@@ -71,19 +71,19 @@ printf(char *fmt, ...)
   if(locking)
     acquire(&pr.lock);
 
-  if (fmt == 0)
+  if(fmt == 0)
     panic("null fmt");
 
   va_start(ap, fmt);
-  for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
-    if(c != '%'){
+  for(i = 0; (c = fmt[i] & 0xff) != 0; i++) {
+    if(c != '%') {
       consputc(c);
       continue;
     }
     c = fmt[++i] & 0xff;
     if(c == 0)
       break;
-    switch(c){
+    switch(c) {
     case 'd':
       printint(va_arg(ap, int), 10, 1);
       break;
@@ -122,6 +122,7 @@ panic(char *s)
   printf("panic: ");
   printf(s);
   printf("\n");
+  backtrace();
   panicked = 1; // freeze uart output from other CPUs
   for(;;)
     ;
@@ -132,4 +133,16 @@ printfinit(void)
 {
   initlock(&pr.lock, "pr");
   pr.locking = 1;
+}
+void
+backtrace()
+{
+  uint64 fp;
+  fp = r_fp();
+  pagetable_t pagetable = (pagetable_t)PGROUNDDOWN(fp);
+  printf("backtrace:\n");
+  while((pagetable_t)PGROUNDDOWN(fp) == pagetable) {
+    printf("%p\n", *(uint64*)(fp - 8));
+    fp = *(uint64*)(fp - 16);
+  }
 }

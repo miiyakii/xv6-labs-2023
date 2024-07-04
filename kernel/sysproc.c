@@ -59,14 +59,15 @@ sys_sleep(void)
     n = 0;
   acquire(&tickslock);
   ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(killed(myproc())){
+  while(ticks - ticks0 < n) {
+    if(killed(myproc())) {
       release(&tickslock);
       return -1;
     }
     sleep(&ticks, &tickslock);
   }
   release(&tickslock);
+  backtrace();
   return 0;
 }
 
@@ -90,4 +91,27 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+uint64
+sys_sigalarm(void)
+{
+  int interval;
+  uint64 handler;
+  argint(0, &interval);
+  argaddr(1, &handler);
+  myproc()->alarm_interval = interval;
+  myproc()->alarm_handler = handler;
+  acquire(&tickslock);
+  myproc()->ticks = ticks;
+  release(&tickslock);
+  return 0;
+}
+uint64
+sys_sigreturn(void)
+{
+  memmove(myproc()->trapframe, myproc()->backup_trapframe, sizeof(struct trapframe));
+  acquire(&tickslock);
+  myproc()->ticks = ticks;
+  release(&tickslock);
+  return myproc()->trapframe->a0;
 }
