@@ -80,7 +80,7 @@ usertrap(void)
 
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2) {
-    //yield();
+    yield();
     acquire(&tickslock);
     if(p->alarm_interval > 0 && (int)(ticks - p->ticks) >= p->alarm_interval) {
       // store all registers in the trapframe
